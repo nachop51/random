@@ -42,6 +42,9 @@ __int8_t evaluate_input(char *lineptr, char *cmd, char **args)
 		args[++i] = tok, tok = strtok(NULL, " \t\n");
 	args[++i] = NULL;
 
+	if (args[0] == NULL)
+		return (1);
+
 	if (args[0][0] != '/')
 		if (solve_path(cmd, args[0]))
 			args[0] = cmd;
@@ -89,12 +92,12 @@ __uint8_t execute_input(char **args, char *error)
  */
 __int32_t main(void)
 {
-	char lineptr[256] = {0}, *args[32], error = 0, cmd[256];
+	char lineptr[1024] = {0}, *args[32], error = 0, cmd[256];
 
 	while (memset(args, 0, 128) && memset(cmd, 0, 256))
 	{
 		isatty(STDIN_FILENO) ? write(1, "$ ", 2) : 0;
-		if (_getline(lineptr, 256) == EOF)
+		if (_getline(lineptr, 1024) == EOF)
 			break;
 		if (evaluate_input(lineptr, cmd, args) == 1)
 			continue;
