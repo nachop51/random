@@ -80,9 +80,10 @@ static uint8_t reset_line(struct cmd_t *line)
  */
 int32_t main(__attribute__((unused)) int32_t ac, char **av)
 {
-	struct cmd_t line = {{0}, {0}, {0}, av[0], 0};
+	struct cmd_t line = {{0}, {0}, {0}, 0, 0};
 	uint8_t error = 0;
 
+	line.pname = av[0];
 	while (reset_line(&line))
 	{
 		if (!evaluate_input(&line, &error))

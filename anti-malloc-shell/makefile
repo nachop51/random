@@ -1,5 +1,5 @@
 CC=gcc
-GCC_FLAGS=-Wall -Werror -Wextra -pedantic -g
+GCC_FLAGS=-Wall -Werror -Wextra -pedantic -std=gnu89 -g
 VAL_FLAGS=--track-origins=yes --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 -s
 SRC= *.c
 NAME=shell
