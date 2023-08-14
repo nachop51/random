@@ -1,65 +1,26 @@
 #include "shell.h"
 
-#include <stdio.h>
-
 /**
- * built_in - Checks if the command is a built-in
- * @args: Arguments to be passed to the command
- * Return: 1 if the command is a built-in, -1 otherwise
- */
-__int8_t built_in(char **args, __uint8_t *error)
-{
-	if (strcmp(args[0], "env") == 0)
-	{
-		__uint16_t i = 0;
-
-		while (environ[i])
-			write(1, environ[i], strlen(environ[i])), i += write(1, "\n", 1);
-		return (1);
-	}
-	else if (strcmp(args[0], "exit") == 0)
-		exit(*error);
-	return (-1);
-}
-
-/**
- * evaluate_input - Evaluates the input and returns the command and arguments
+ * _getline - Anti-malloc implementation of getline
  * @lineptr: Pointer to the input string
- * @cmd: Pointer to the command string
- * @args: Pointer to the arguments array
- *
- * Return: 0 if the command was found, 1 otherwise
+ * @n: Size of the input string
+ * Return: Number of characters read
  */
-__int8_t evaluate_input(char *lineptr, char *cmd,
-						char **args, __uint8_t *error)
+static int8_t _getline(char *lineptr, uint64_t n)
 {
-	char *tok = strtok(lineptr, "\n");
-	__int8_t i = -1;
+	char c = 0;
+	uint64_t i = 0;
 
-	if (!tok)
-		return (0);
-	tok = strtok(lineptr, " \t\n");
-	while (tok != NULL)
-		args[++i] = tok, tok = strtok(NULL, " \t\n");
-	args[++i] = NULL;
-
-	if (args[0] == NULL)
-		return (1);
-
-	if (args[0][0] != '/')
-		if (solve_path(cmd, args[0]))
-			args[0] = cmd;
-
-	if (access(args[0], F_OK) == -1) /* Command not found */
+	while (c != '\n' && i < n)
 	{
-		if (built_in(args, error) != -1)
-			return (1);
-		write(2, args[0], strlen(args[0]));
-		write(2, ": Command not found. :(\n", 25);
-		*error = 127;
-		return (1);
+		if (read(0, &c, 1) == 0)
+			return (EOF);
+		lineptr[i++] = c;
+		if (c == '\n')
+			break;
 	}
-	return (0);
+	lineptr[i] = '\0';
+	return (i);
 }
 
 /**
@@ -68,44 +29,65 @@ __int8_t evaluate_input(char *lineptr, char *cmd,
  * @error: Error code of the last command executed
  * Return: 1 if the command was executed successfully, 0 otherwise
  */
-__uint8_t execute_input(char **args, __uint8_t *error)
+static uint8_t execute_input(char **args, uint8_t *error)
 {
-	__int32_t pid = -1, status;
+	int32_t status;
 
 	if (args[0] == NULL)
 		return (1);
-	pid = fork();
-	if (pid == -1)
-		write(2, "Fork failed", 12), exit(1);
-	if (pid == 0)
+	switch (fork())
+	{
+	case -1:
+		_dprintf(2, "%s: Fork failed\n", args[0]);
+		return (0);
+	case 0:
 		if (execve(args[0], args, environ) == -1)
 		{
-			write(2, args[0], strlen(args[0])), write(2, ": Nope. :(\n", 12);
+			_dprintf(2, "%s: Something went wrong\n", args[0]);
 			return (0);
 		}
-	wait(&status);
-	*error = WIFEXITED(status) ? WEXITSTATUS(status) : 0;
+		break;
+	default:
+		wait(&status);
+		*error = WIFEXITED(status) ? WEXITSTATUS(status) : 0;
+		break;
+	}
+	return (1);
+}
+
+/**
+ * reset_line - Resets the line struct and calls getline
+ * @line: Struct to store the input string, command and arguments
+ * Return: 1 if the line was reset, 0 otherwise
+ */
+static uint8_t reset_line(struct cmd_t *line)
+{
+	_memset(line->args, 0, 128);
+	_memset(line->cmd, 0, 256);
+	line->number++;
+	isatty(STDIN_FILENO) ? write(1, "$ ", 2) : 0;
+	if (_getline(line->string, 1024) == EOF)
+		return (0);
 	return (1);
 }
 
 /**
  * main - Shell entry point
+ * @ac: Number of arguments passed to the shell
+ * @av: Arguments passed to the shell
  *
  * Return: Error code of the last command executed or 0 if no error
  */
-__int32_t main(void)
+int32_t main(__attribute__((unused)) int32_t ac, char **av)
 {
-	char lineptr[1024] = {0}, *args[32], cmd[256];
-	__uint8_t error = 0;
+	struct cmd_t line = {{0}, {0}, {0}, av[0], 0};
+	uint8_t error = 0;
 
-	while (memset(args, 0, 128) && memset(cmd, 0, 256))
+	while (reset_line(&line))
 	{
-		isatty(STDIN_FILENO) ? write(1, "$ ", 2) : 0;
-		if (_getline(lineptr, 1024) == EOF)
-			break;
-		if (evaluate_input(lineptr, cmd, args, &error) == 1)
+		if (!evaluate_input(&line, &error))
 			continue;
-		if (!execute_input(args, &error))
+		if (!execute_input(line.args, &error))
 			break;
 	}
 	return (error);
