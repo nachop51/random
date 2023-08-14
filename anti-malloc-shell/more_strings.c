@@ -24,7 +24,7 @@ char *_strcat(char *dest, char *src)
  */
 char *_strtok(char *str, char *delim)
 {
-	static char *ptr = NULL;
+	static char *ptr;
 	char *tok = NULL;
 
 	if (str)
