@@ -7,18 +7,18 @@
  * @args: Arguments to be passed to the command
  * Return: 1 if the command is a built-in, -1 otherwise
  */
-__int8_t built_in(char **args)
+__int8_t built_in(char **args, __uint8_t *error)
 {
 	if (strcmp(args[0], "env") == 0)
 	{
 		__uint16_t i = 0;
 
 		while (environ[i])
-			write(1, environ[i], strlen(environ[i])), ++i;
+			write(1, environ[i], strlen(environ[i])), i += write(1, "\n", 1);
 		return (1);
 	}
 	else if (strcmp(args[0], "exit") == 0)
-		exit(0);
+		exit(*error);
 	return (-1);
 }
 
@@ -30,7 +30,8 @@ __int8_t built_in(char **args)
  *
  * Return: 0 if the command was found, 1 otherwise
  */
-__int8_t evaluate_input(char *lineptr, char *cmd, char **args)
+__int8_t evaluate_input(char *lineptr, char *cmd,
+						char **args, __uint8_t *error)
 {
 	char *tok = strtok(lineptr, "\n");
 	__int8_t i = -1;
@@ -51,10 +52,11 @@ __int8_t evaluate_input(char *lineptr, char *cmd, char **args)
 
 	if (access(args[0], F_OK) == -1) /* Command not found */
 	{
-		if (built_in(args) != -1)
+		if (built_in(args, error) != -1)
 			return (1);
 		write(2, args[0], strlen(args[0]));
 		write(2, ": Command not found. :(\n", 25);
+		*error = 127;
 		return (1);
 	}
 	return (0);
@@ -66,7 +68,7 @@ __int8_t evaluate_input(char *lineptr, char *cmd, char **args)
  * @error: Error code of the last command executed
  * Return: 1 if the command was executed successfully, 0 otherwise
  */
-__uint8_t execute_input(char **args, char *error)
+__uint8_t execute_input(char **args, __uint8_t *error)
 {
 	__int32_t pid = -1, status;
 
@@ -81,7 +83,8 @@ __uint8_t execute_input(char **args, char *error)
 			write(2, args[0], strlen(args[0])), write(2, ": Nope. :(\n", 12);
 			return (0);
 		}
-	wait(&status), WIFEXITED(status) ? *error = WEXITSTATUS(status) : 0;
+	wait(&status);
+	*error = WIFEXITED(status) ? WEXITSTATUS(status) : 0;
 	return (1);
 }
 
@@ -92,14 +95,15 @@ __uint8_t execute_input(char **args, char *error)
  */
 __int32_t main(void)
 {
-	char lineptr[1024] = {0}, *args[32], error = 0, cmd[256];
+	char lineptr[1024] = {0}, *args[32], cmd[256];
+	__uint8_t error = 0;
 
 	while (memset(args, 0, 128) && memset(cmd, 0, 256))
 	{
 		isatty(STDIN_FILENO) ? write(1, "$ ", 2) : 0;
 		if (_getline(lineptr, 1024) == EOF)
 			break;
-		if (evaluate_input(lineptr, cmd, args) == 1)
+		if (evaluate_input(lineptr, cmd, args, &error) == 1)
 			continue;
 		if (!execute_input(args, &error))
 			break;
