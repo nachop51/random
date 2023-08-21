@@ -66,3 +66,41 @@ inline void print_list(list_t *h)
 	while (h)
 		printf("%s", h->line), h = h->next;
 }
+
+/**
+ * @brief returns the number of elements in a linked list
+ * @param h list_t Pointer to the head of the list
+ * @return size_t Number of elements in the list
+ */
+size_t list_len(list_t *h)
+{
+	size_t i = 0;
+
+	while (h)
+		h = h->next, i++;
+	return (i);
+}
+
+/**
+ * @brief converts a list to a vector
+ * @param h list_t Pointer to the head of the list
+ * @return char ** Pointer to the vector
+ */
+char **list_to_vector(list_t *h)
+{
+	int i = 0;
+	char **v = NULL;
+
+	if (!h)
+		return (NULL);
+	v = malloc(sizeof(char *) * (list_len(h) + 1));
+	if (!v)
+		return (NULL);
+	while (h)
+	{
+		v[i] = h->line;
+		h = h->next, i++;
+	}
+	v[i] = NULL;
+	return (v);
+}

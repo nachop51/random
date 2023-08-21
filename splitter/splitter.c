@@ -1,7 +1,27 @@
 #include "splitter.h"
 
+char **splitter(char *str)
+{
+	list_t *tokens = NULL;
+	char *tok = NULL;
+
+	tok = strtok(str, " \t\n");
+	while (tok != NULL)
+	{
+		if (add_node_end(&tokens, tok) == NULL)
+		{
+			free_list(tokens);
+			return (NULL);
+		}
+		tok = strtok(NULL, " \t\n");
+	}
+
+	return (list_to_vector(tokens));
+}
+
 int32_t main(int ac, char **av)
 {
+	// * --------------- Setup ---------------
 	if (ac != 2)
 	{
 		dprintf(2, "Usage: %s <filename>\n", av[0]);
@@ -17,7 +37,7 @@ int32_t main(int ac, char **av)
 
 	list_t *head = NULL;
 	char *line = NULL;
-	size_t n = 0;
+	uint64_t n = 0;
 
 	while (getline(&line, &n, fp) != EOF)
 	{
@@ -29,7 +49,31 @@ int32_t main(int ac, char **av)
 		}
 	}
 
-	print_list(head);
+	// * --------------- Split ---------------
+
+	char **tokens = NULL;
+
+	list_t *current = head;
+
+	while (current != NULL)
+	{
+		printf("Line: \"%s\"\n", current->line);
+		tokens = splitter(current->line);
+		if (tokens == NULL)
+		{
+			perror("Error: ");
+			free_list(head);
+			free(line);
+			return (EXIT_FAILURE);
+		}
+		printf("Tokens:\n[");
+		for (uint16_t i = 0; tokens[i] != NULL; i++)
+			i != 0 ? printf(", ") : 0, printf("\"%s\"", tokens[i]);
+		printf("]\n");
+		current = current->next;
+	}
+
+	// * --------------- Cleanup ---------------
 
 	free(line);
 	free_list(head);
