@@ -98,7 +98,7 @@ char **list_to_vector(list_t *h)
 		return (NULL);
 	while (h)
 	{
-		v[i] = h->line;
+		v[i] = strdup(h->line);
 		h = h->next, i++;
 	}
 	v[i] = NULL;

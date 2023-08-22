@@ -1,11 +1,37 @@
 #include "splitter.h"
 
+void free_vector(char **vector)
+{
+	for (uint16_t i = 0; vector[i] != NULL; i++)
+		free(vector[i]);
+	free(vector);
+}
+
 char **splitter(char *str)
 {
 	list_t *tokens = NULL;
-	char *tok = NULL;
+	char *tok = NULL, **token_vector = NULL, buffer[1024] = {0};
+	uint16_t j = 0;
 
-	tok = strtok(str, " \t\n");
+	for (uint16_t i = 0; str[i] != '\0'; i++)
+	{
+		if (str[i] != ' ' && str[i] != '"' && str[i] != '\'')
+			buffer[j++] = str[i];
+		else
+		{
+			if (j != 0)
+			{
+				buffer[j] = '\0';
+				if (add_node_end(&tokens, buffer) == NULL)
+				{
+					free_list(tokens);
+					return (NULL);
+				}
+				j = 0, memset(buffer, 0, sizeof(buffer));
+			}
+		}
+	}
+
 	while (tok != NULL)
 	{
 		if (add_node_end(&tokens, tok) == NULL)
@@ -16,7 +42,9 @@ char **splitter(char *str)
 		tok = strtok(NULL, " \t\n");
 	}
 
-	return (list_to_vector(tokens));
+	token_vector = list_to_vector(tokens);
+	free_list(tokens);
+	return (token_vector);
 }
 
 int32_t main(int ac, char **av)
@@ -71,6 +99,7 @@ int32_t main(int ac, char **av)
 			i != 0 ? printf(", ") : 0, printf("\"%s\"", tokens[i]);
 		printf("]\n");
 		current = current->next;
+		free_vector(tokens);
 	}
 
 	// * --------------- Cleanup ---------------
