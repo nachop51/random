@@ -8,6 +8,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include "lists.h"
+#include "utils.h"
 
 #endif /* _SPLITTER_H */

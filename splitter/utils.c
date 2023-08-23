@@ -1,4 +1,4 @@
-#include "lists.h"
+#include "splitter.h"
 
 /**
  * @brief adds a new node at the end of a list_t list
@@ -103,4 +103,19 @@ char **list_to_vector(list_t *h)
 	}
 	v[i] = NULL;
 	return (v);
+}
+
+void free_vector(char **vector)
+{
+	for (uint16_t i = 0; vector[i] != NULL; i++)
+		free(vector[i]);
+	free(vector);
+}
+
+void print_vector(char **v)
+{
+	printf("Vector:\n[");
+	for (uint16_t i = 0; v[i] != NULL; i++)
+		i != 0 ? printf(", ") : 0, printf("\"%s\"", v[i]);
+	printf(", NULL]\n");
 }

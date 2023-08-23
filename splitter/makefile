@@ -5,13 +5,16 @@ SRC= *.c
 NAME=splitter
 ARGS=args.txt
 
-all: build
+all: build valgrind remove
 
 build:
 	@$(CC) $(GCC_FLAGS) $(SRC) -o $(NAME)
 
-run:
+valgrind: build
 	@valgrind $(VAL_FLAGS) ./$(NAME) $(ARGS)
+
+run: build
+	@./$(NAME) $(ARGS)
 
 remove:
 	@rm $(NAME)

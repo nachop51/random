@@ -1,2 +1,4 @@
 echo -e "This is a test"
 git commit -m "This is my first commit using the splitter"
+ls "/var"/"tmp""/"
+ls "/var"/"tmp""/
