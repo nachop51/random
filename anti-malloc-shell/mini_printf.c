@@ -52,7 +52,7 @@ static void p_str(uint8_t fd, va_list args)
 
 	if (!str)
 		str = "(null)";
-	write(fd, str, strlen(str));
+	write(fd, str, _strlen(str));
 }
 
 /**

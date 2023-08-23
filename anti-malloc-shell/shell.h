@@ -4,7 +4,6 @@
 #include "definitions.h"
 #include "shell_string.h"
 
-#include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
@@ -22,6 +21,22 @@ struct cmd_t
 {
 	char string[1024], cmd[256], *args[32], *pname;
 	__uint16_t number;
+};
+
+/**
+ * enum input_type - Enum to store the type of input
+ * @NOTHING: Nothing
+ * @BUILT_IN: Built-in
+ * @EXIT_BUILTIN: Exit
+ * @EXECUTE_CMD: Execute
+ *
+ */
+enum input_type
+{
+	NOTHING,
+	BUILT_IN,
+	EXIT_BUILTIN,
+	EXECUTE_CMD
 };
 
 __int8_t evaluate_input(struct cmd_t *line, __uint8_t *error);

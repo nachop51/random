@@ -8,5 +8,6 @@ int32_t _strncmp(char *s1, char *s2, uint32_t n);
 char *_strcpy(char *dest, char *src);
 char *_strcat(char *dest, char *src);
 char *_strtok(char *str, char *delim);
+int32_t _strcmp(char *s1, char *s2);
 
 #endif /* SHELL_STRING_H */

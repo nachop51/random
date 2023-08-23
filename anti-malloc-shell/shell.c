@@ -6,10 +6,10 @@
  * @n: Size of the input string
  * Return: Number of characters read
  */
-static int8_t _getline(char *lineptr, uint64_t n)
+static int8_t _getline(char *lineptr, uint16_t n)
 {
 	char c = 0;
-	uint64_t i = 0;
+	uint16_t i = 0;
 
 	while (c != '\n' && i < n)
 	{
@@ -65,7 +65,8 @@ static uint8_t reset_line(struct cmd_t *line)
 	_memset(line->args, 0, 128);
 	_memset(line->cmd, 0, 256);
 	line->number++;
-	isatty(STDIN_FILENO) ? write(1, "$ ", 2) : 0;
+	if (isatty(STDIN_FILENO))
+		_dprintf(1, "$ ");
 	if (_getline(line->string, 1024) == EOF)
 		return (0);
 	return (1);
@@ -81,14 +82,16 @@ static uint8_t reset_line(struct cmd_t *line)
 int32_t main(__attribute__((unused)) int32_t ac, char **av)
 {
 	struct cmd_t line = {{0}, {0}, {0}, 0, 0};
-	uint8_t error = 0;
+	uint8_t error = 0, ret = 0;
 
 	line.pname = av[0];
 	while (reset_line(&line))
 	{
-		if (!evaluate_input(&line, &error))
+		ret = evaluate_input(&line, &error);
+
+		if (ret == NOTHING || ret == BUILT_IN)
 			continue;
-		if (!execute_input(line.args, &error))
+		if (ret == EXIT_BUILTIN || !execute_input(line.args, &error))
 			break;
 	}
 	return (error);

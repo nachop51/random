@@ -1,5 +1,4 @@
 #include "shell.h"
-#include <stdlib.h>
 
 /**
  * _getenv - Gets the value of an environment variable
@@ -54,23 +53,22 @@ static int8_t solve_path(char *buff, char *cmd)
 /**
  * built_in - Checks if the command is a built-in
  * @args: Arguments to be passed to the command
- * @error: Error code of the last command executed
  *
  * Return: 1 if the command is a built-in, -1 otherwise
  */
-static int8_t built_in(char **args, uint8_t *error)
+static int8_t built_in(char **args)
 {
-	if (strcmp(args[0], "env") == 0)
+	if (_strcmp(args[0], "env") == 0)
 	{
 		uint16_t i = 0;
 
 		while (environ[i])
-			write(1, environ[i], strlen(environ[i])), i += write(1, "\n", 1);
-		return (1);
+			_dprintf(1, "%s\n", environ[i++]);
+		return (BUILT_IN);
 	}
-	else if (strcmp(args[0], "exit") == 0)
-		exit(*error);
-	return (-1);
+	else if (_strcmp(args[0], "exit") == 0)
+		return (EXIT_BUILTIN);
+	return (NOTHING);
 }
 
 /**
@@ -84,15 +82,15 @@ static int8_t tokenize_line(struct cmd_t *line)
 	int8_t i = -1;
 
 	if (!tok)
-		return (0);
+		return (NOTHING);
 	tok = _strtok(line->string, " \t\n");
 	while (tok != NULL)
 		line->args[++i] = tok, tok = _strtok(NULL, " \t\n");
 	line->args[++i] = NULL;
 
 	if (line->args[0] == NULL)
-		return (0);
-	return (1);
+		return (NOTHING);
+	return (EXECUTE_CMD);
 }
 
 /**
@@ -104,21 +102,26 @@ static int8_t tokenize_line(struct cmd_t *line)
  */
 int8_t evaluate_input(struct cmd_t *line, uint8_t *error)
 {
+	uint8_t ret = 0;
+
 	if (!tokenize_line(line))
-		return (0);
+		return (NOTHING);
 
 	if (line->args[0][0] != '/' && solve_path(line->cmd, line->args[0]))
 		line->args[0] = line->cmd;
 
 	if (access(line->args[0], F_OK) == -1) /* Command not found */
 	{
-		if (built_in(line->args, error) != -1)
-			return (1);
+		ret = built_in(line->args);
+		if (ret == EXIT_BUILTIN)
+			return (EXIT_BUILTIN);
+		else if (ret == BUILT_IN)
+			return (BUILT_IN);
 		_dprintf(2, "%s: %d: %s: not found\n", line->pname,
 				 line->number, line->args[0]);
 		*error = 127;
-		return (0);
+		return (NOTHING);
 	}
 
-	return (1);
+	return (EXECUTE_CMD);
 }
