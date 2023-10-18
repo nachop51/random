@@ -1,0 +1,3 @@
+/home/nacho/dev/random/calculator/build/CMakeFiles/Calculator.dir
+/home/nacho/dev/random/calculator/build/CMakeFiles/edit_cache.dir
+/home/nacho/dev/random/calculator/build/CMakeFiles/rebuild_cache.dir
