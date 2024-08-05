@@ -118,13 +118,13 @@ class ProjectCreator:
         return True
 
     def create_readme(self, soup: BeautifulSoup, force_create=False):
-        container_desc = soup.find("div", {"id": "project-description"})
-
         self.find_directory_and_create_dirs(soup)
 
-        filename = os.path.join(self.directory, README_FILENAME)
+        container_desc = soup.find("div", {"id": "project-description"})
 
-        if os.path.exists(filename) and not force_create:
+        image_filename = os.path.join(self.directory, README_FILENAME)
+
+        if os.path.exists(image_filename) and not force_create:
             return
 
         image_tags: list[Tag] = soup.find_all("img")
@@ -137,13 +137,13 @@ class ProjectCreator:
             for tag in image_tags:
                 src = tag.get("src")
 
-                filename = src.split("/")[-1].split("?")[0]
+                image_filename = src.split("/")[-1].split("?")[0]
 
-                self.download_image(src, filename)
+                self.download_image(src, image_filename)
 
-                tag["src"] = filename
+                tag["src"] = image_filename
 
-                tag.attrs["src"] = filename
+                tag.attrs["src"] = image_filename
 
         if len(link_tags) > 0:
             for tag in link_tags:
@@ -156,9 +156,10 @@ class ProjectCreator:
 
                 tag["href"] = link
 
-        self.save_to_file(md(container_desc.prettify()), filename)
+        print(image_filename)
+        self.save_to_file(md(container_desc.prettify()), image_filename)
 
-        mdformat.file(filename)
+        mdformat.file(image_filename)
 
     def create_task_files(self, tasks: list[Tag]):
         for task in tasks:
