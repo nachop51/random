@@ -26,11 +26,22 @@ def make_request(url):
         url, headers=credentials["headers"], cookies=credentials["cookies"]
     )
 
+    res.raise_for_status()
+
     return res
 
 
 def scrap_the_shit_out_of_the_page(html: str):
     soup = BeautifulSoup(html, "lxml")
+
+    # find item by ID
+
+    container_desc = soup.find("div", {"id": "project-id"})
+
+    image_tag = soup.find_all("img")
+
+    for image in
+
 
 
 def main():
